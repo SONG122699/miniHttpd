@@ -2,19 +2,28 @@
 #include<unistd.h>
 #include<sys/types.h>
 #include<sys/socket.h>
+#include<string.h>
 //#include<winsock2.h>
 #include<ctype.h>
 #include<arpa/inet.h>//用于互联网地址的定义，包括一些转换函数
 
 #define _debug 0
+#define SERVER_PORT 8084
+
 int get_line(int sock, char* buff, int size);
 void do_http_request(int client_sock);
+void do_http_response(int client_sock);
 
+/*
+*解析客户端请求
+*@para client_sock 客户端socket编号
+*/
 void do_http_request(int client_sock){
     int len;
     char buff[256];
     char method[64];
     char url[256];
+    char path[256];
     /*读取客户端发送的http请求*/
     //1.读取请求行
     len = get_line(client_sock, buff, sizeof(buff));
@@ -28,22 +37,56 @@ void do_http_request(int client_sock){
         method[i] = '\0';
         if(_debug) printf("request method: %s\n", method);
 
-        if(strncasecmp(method, "GET", strlen(method))){
+        if(strncasecmp(method, "GET", strlen(method)) == 0){//处理get请求
             if(_debug) printf("method = GET\n");
             //获取url
             while(isspace(buff[j])) j++;//跳过空白符
             i = 0;
-            while(!isspace[buff[j]] && i<sizeof(url)-1){
+            while(!isspace(buff[j]) && i<sizeof(url)-1){
                 url[i] = buff[j];
                 i++;
                 j++;
             }
             url[i] = '\0';
             if(_debug) printf("url: %s\n",url);
+
+            //继续读取http头部
+            do{
+                len = get_line(client_sock, buff, sizeof(buff));
+                if(_debug) printf("read: %s\n",buff);
+            }while(len > 0);
+
+            //***定位服务器本地的html文件***
+            //有参数的情况，处理url中的?，得到真实的url
+            {
+                char *pos = strchar(url, '?');//返回?第一次出现的地址
+                if(pos){
+                    *pos = '\0';//将出现的?改为结束符
+                    printf("real url : %s\n",url);
+                }
+            }
+
+            sprintf(path, "./html/%s", url);
+            if(_debug) printf("html path: %s\n", path);
+
+
+        }else{//非get请求,响应501 metho
+            fprintf(stderr, "warning! other method [%s]\n", method);
+        //继续读取http头部
+            do{
+                len = get_line(client_sock, buff, sizeof(buff));
+                if(_debug) printf("read: %s\n",buff);
+            }while(len > 0);
+            //unimplemented(client_sock);//
         }
+    }else{//请求格式有问题，出错处理
+        //bad_request(client_sock);
     }
 }
 
+void do_http_response(int client_sock){
+
+}
 /*读取请求信息
 *@para sock:套接字描述符
 *@para buff:数据缓冲区
@@ -84,7 +127,6 @@ int get_line(int sock, char* buff, int size){
     return count;
 }
 
-#define SERVER_PORT 8003
 
 int main(void){
     int sock;//
