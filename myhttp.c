@@ -6,16 +6,42 @@
 #include<ctype.h>
 #include<arpa/inet.h>//用于互联网地址的定义，包括一些转换函数
 
-
+#define _debug 0
 int get_line(int sock, char* buff, int size);
 void do_http_request(int client_sock);
 
 void do_http_request(int client_sock){
     int len;
     char buff[256];
+    char method[64];
+    char url[256];
     /*读取客户端发送的http请求*/
     //1.读取请求行
     len = get_line(client_sock, buff, sizeof(buff));
+    if(len > 0){
+        int i = 0, j = 0;
+        while(!isspace(buff[i]) && i<sizeof(method)-1){
+            method[i] = buff[i];
+            i++;
+            j++;
+        }
+        method[i] = '\0';
+        if(_debug) printf("request method: %s\n", method);
+
+        if(strncasecmp(method, "GET", strlen(method))){
+            if(_debug) printf("method = GET\n");
+            //获取url
+            while(isspace(buff[j])) j++;//跳过空白符
+            i = 0;
+            while(!isspace[buff[j]] && i<sizeof(url)-1){
+                url[i] = buff[j];
+                i++;
+                j++;
+            }
+            url[i] = '\0';
+            if(_debug) printf("url: %s\n",url);
+        }
+    }
 }
 
 /*读取请求信息
