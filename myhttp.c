@@ -144,7 +144,6 @@ void do_http_response(int client_sock){
 void not_found(int client_sock){
     const char* main_header = "\
     HTTP/1.0 404 NOT FOUND\r\n\
-    Server: Song Server\r\n\
     Content-Type: text/html\r\n\
     \r\n\
     ";
