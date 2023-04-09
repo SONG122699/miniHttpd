@@ -24,7 +24,7 @@ void do_http_request(int client_sock){
     int len;
     char buff[256];
     char method[64];
-    char url[256];
+    char url[128];
     char path[256];
     /*读取客户端发送的http请求*/
     //1.读取请求行
