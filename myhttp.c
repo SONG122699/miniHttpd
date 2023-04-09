@@ -61,7 +61,7 @@ void do_http_request(int client_sock){
             //***定位服务器本地的html文件***
             //有参数的情况，处理url中的?，得到真实的url
             {
-                char *pos = strchar(url, '?');//返回?第一次出现的地址
+                char *pos = strchr(url, '?');//返回?第一次出现的地址
                 if(pos){
                     *pos = '\0';//将出现的?改为结束符
                     printf("real url : %s\n",url);
@@ -90,7 +90,7 @@ void do_http_request(int client_sock){
 }
 
 void do_http_response(int client_sock){
-    const char* main_header = "
+    const char* main_header = "\
     HTTP/1.0 200 OK\r\n\
     Server: Song Server\r\n\
     Content-Type: text/html\r\n\
@@ -103,7 +103,7 @@ void do_http_response(int client_sock){
 	    <meta charset=\"UTF-8\">\n\
 	    <title>登录页面</title>\n\
     </head>\n\
-    <body align=center height="500px" >\n\
+    <body align=center height=\"500px\" >\n\
     <div>\n\
     <h1>登录页面</h1>\n\
     <form>\n\
