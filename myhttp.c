@@ -29,6 +29,7 @@ void do_http_request(int client_sock){
     char method[64];
     char url[128];
     char path[256];
+    struct stat st;
     /*读取客户端发送的http请求*/
     //1.读取请求行
     len = get_line(client_sock, buff, sizeof(buff));
