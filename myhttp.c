@@ -146,6 +146,7 @@ void not_found(int client_sock){
     HTTP/1.0 404 NOT FOUND\r\n\
     Server: Song Server\r\n\
     Content-Type: text/html\r\n\
+    \r\n\
     ";
     const char* reply = "\
     <!DOCTYPE html>\n\
