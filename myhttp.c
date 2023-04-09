@@ -157,7 +157,7 @@ void not_found(int client_sock){
 	    <h1>404 Not Found</h1>\n\
 	    <p>The page you are looking for could not be found.</p>\n\
     </body>\n\
-    /html>\n\
+    </html>\n\
     ";
 
     int len  = write(client_sock, main_header, strlen(main_header));
