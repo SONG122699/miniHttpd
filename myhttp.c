@@ -1,13 +1,15 @@
 #include<stdio.h>
 #include<unistd.h>
 #include<sys/types.h>
+#include<sys/stat.h>
 #include<sys/socket.h>
 #include<string.h>
 //#include<winsock2.h>
 #include<ctype.h>
+#include<errno.h>
 #include<arpa/inet.h>//用于互联网地址的定义，包括一些转换函数
 
-#define _debug 0
+#define _debug 1
 
 #define SERVER_PORT 8085
 
@@ -15,6 +17,7 @@
 int get_line(int sock, char* buff, int size);
 void do_http_request(int client_sock);
 void do_http_response(int client_sock);
+void not_found(int client_sock);
 
 /*
 *解析客户端请求
@@ -72,8 +75,13 @@ void do_http_request(int client_sock){
             if(_debug) printf("html path: %s\n", path);
 
             //执行响应
-            do_http_response(client_sock);
-
+            //如果请求的文件存在，则返回相应的文件；如果不存在，响应404 NOT FOUND
+            if(stat(path, &st) < 0){//文件不存在或者出错
+            not_found(client_sock);
+            }
+            else{
+                do_http_response(client_sock);
+            }
 
         }else{//非get请求,响应501 metho
             fprintf(stderr, "warning! other method [%s]\n", method);
@@ -131,6 +139,38 @@ void do_http_response(int client_sock){
     len = write(client_sock, welcome_html, wc_len);
     if(_debug) fprintf(stdout, "write html[%d]: %s",len, welcome_html);
 }
+
+void not_found(int client_sock){
+    const char* main_header = "\
+    HTTP/1.0 404 NOT FOUND\r\n\
+    Server: Song Server\r\n\
+    Content-Type: text/html\r\n\
+    ";
+    const char* reply = "\
+    <!DOCTYPE html>\n\
+    <html>\n\
+    <head>\n\
+	<title>404 Not Found</title>\n\
+    </head>\n\
+    <body>\n\
+	    <h1>404 Not Found</h1>\n\
+	    <p>The page you are looking for could not be found.</p>\n\
+    </body>\n\
+    /html>\n\
+    ";
+
+    int len  = write(client_sock, main_header, strlen(main_header));
+    if(_debug) fprintf(stdout, "... send main_header ...\n");
+    if(_debug) fprintf(stdout, "write[%d] : %s", len, main_header);
+
+    len = write(client_sock, reply, strlen(reply));
+    if(len <= 0){
+        fprintf(stderr, "send reply failed, reason: %s\n", strerror(errno));
+    }
+
+
+}
+
 /*读取请求信息
 *@para sock:套接字描述符
 *@para buff:数据缓冲区
