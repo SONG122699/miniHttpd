@@ -72,7 +72,7 @@ void do_http_request(int client_sock){
                 }
             }
 
-            sprintf(path, "var/www/html%s", url);
+            sprintf(path, "/var/www/html%s", url);
             if(_debug) printf("html path: %s\n", path);
 
             //执行响应
