@@ -77,7 +77,7 @@ void do_http_request(int client_sock){
 
             //执行响应
             //如果请求的文件存在，则返回相应的文件；如果不存在，响应404 NOT FOUND
-            if(stat(path, &st) < 0){//文件不存在或者出错
+            if(stat(path, &st) == -1){//文件不存在或者出错
             not_found(client_sock);
             }
             else{
@@ -164,7 +164,15 @@ void not_found(int client_sock){
     if(_debug) fprintf(stdout, "... send main_header ...\n");
     if(_debug) fprintf(stdout, "write[%d] : %s", len, main_header);
 
+    //2.生成Conten-Length行并发送
+    char send_buff[64];
+    int wc_len = strlen(reply);
+    len = snprintf(send_buff, 64, "Content=Length: %d\r\n\r\n", wc_len);
+    len = write(client_sock, send_buff, len);
+    if(_debug) fprintf(stdout, "write Content=Length[%d]: %s", len, send_buff);
+
     len = write(client_sock, reply, strlen(reply));
+    if(_debug) fprintf(stdout, "write html[%d]: %s",len, reply);
     if(len <= 0){
         fprintf(stderr, "send reply failed, reason: %s\n", strerror(errno));
     }
