@@ -140,16 +140,17 @@ void not_found(int client_sock){
     \r\n\
     ";
     const char* reply = "\
-    <!DOCTYPE html>\n\
-    <html>\n\
-    <head>\n\
-	<title>404 Not Found</title>\n\
-    </head>\n\
-    <body>\n\
-	    <h1>404 Not Found</h1>\n\
-	    <p>The page you are looking for could not be found.</p>\n\
-    </body>\n\
-    </html>\n\
+    <!DOCTYPE html>\r\n\
+    <html lang=\"zh-CN\">\r\n\
+    <head>\r\n\
+    meta content=\"text/html; charset=UTF-8\" http-equiv=\"Content-Type\">\r\n\
+	<title>404 Not Found</title>\r\n\
+    </head>\r\n\
+    <body>\r\n\
+	    <h1>404 Not Found</h1>\r\n\
+	    <p>The page you are looking for could not be found.</p>\r\n\
+    </body>\r\n\
+    </html>\r\n\
     ";
 
     int len  = write(client_sock, main_header, strlen(main_header));
@@ -172,22 +173,23 @@ void not_found(int client_sock){
 
 }
 void internal_error(int client_sock){
-        const char* main_header = "\
-    HTTP/1.0 501 INTERNAL ERROR\r\n\
+    const char* main_header = "\
+    HTTP/1.0 500 INTERNAL ERROR\r\n\
     Content-Type: text/html\r\n\
     \r\n\
     ";
     const char* reply = "\
-    <!DOCTYPE html>\n\
-    <html>\n\
-    <head>\n\
-	<title>501 INTERNAL ERROR</title>\n\
-    </head>\n\
-    <body>\n\
-	    <h1>501 INTERNAL ERROR</h1>\n\
-	    <p>501 INTERNAL ERROR</p>\n\
-    </body>\n\
-    </html>\n\
+    <!DOCTYPE html>\r\n\
+    <html lang=\"zh-CN\">\r\n\
+    <head>\r\n\
+    meta content=\"text/html; charset=UTF-8\" http-equiv=\"Content-Type\">\r\n\
+	<title>500 INTERNAL ERROR</title>\r\n\
+    </head>\r\n\
+    <body>\r\n\
+	    <h1>500 INTERNAL ERROR</h1>\r\n\
+	    <p>500 服务器内部错误。</p>\r\n\
+    </body>\r\n\
+    </html>\r\n\
     ";
 
     int len  = write(client_sock, main_header, strlen(main_header));
