@@ -17,6 +17,7 @@
 int get_line(int sock, char* buff, int size);
 void do_http_request(int client_sock);
 void do_http_response(int client_sock);
+void do_http_response(int client_sock, const char* path);
 void not_found(int client_sock);
 
 /*
@@ -78,7 +79,7 @@ void do_http_request(int client_sock){
             //执行响应
             //如果请求的文件存在，则返回相应的文件；如果不存在，响应404 NOT FOUND
             if(stat(path, &st) == -1){//文件不存在或者出错
-            not_found(client_sock);
+                not_found(client_sock);
             }
             else{
                 do_http_response(client_sock);
@@ -98,6 +99,11 @@ void do_http_request(int client_sock){
     }
 }
 
+
+/*
+*响应客户端请求
+*@para client_sock 客户端socket编号
+*/
 void do_http_response(int client_sock){
     const char* main_header = "\
     HTTP/1.0 200 OK\r\n\
@@ -140,7 +146,10 @@ void do_http_response(int client_sock){
     len = write(client_sock, welcome_html, wc_len);
     if(_debug) fprintf(stdout, "write html[%d]: %s",len, welcome_html);
 }
-
+/*
+*404
+*@para client_sock 客户端socket编号
+*/
 void not_found(int client_sock){
     const char* main_header = "\
     HTTP/1.0 404 NOT FOUND\r\n\
