@@ -16,7 +16,6 @@
 
 int get_line(int sock, char* buff, int size);
 void do_http_request(int client_sock);
-void do_http_response(int client_sock);
 void do_http_response(int client_sock, const char* path);
 void headers(int client_sock, FILE *resource);
 void cat(int client_sock, FILE *resource);
@@ -111,6 +110,7 @@ void do_http_request(int client_sock){
 *@para client_sock 客户端socket编号
 */
 void do_http_response(int client_sock, const char* path){
+    int ret = 0;
     FILE *resource  = NULL;
     resource = fopen(path, "r");
     if(resource == NULL){
@@ -118,10 +118,12 @@ void do_http_response(int client_sock, const char* path){
         return;
     }
     //1. 发送header
-    headers(client_sock, resource);
+    ret = headers(client_sock, resource);
 
     //2. 发送body
-    cat(client_sock, resource);
+    if(!ret){
+        cat(client_sock, resource);
+    }
 
     fclose(resource);
     
@@ -170,7 +172,7 @@ void not_found(int client_sock){
 
 }
 
-void headers(client_sock, resource){
+int headers(int client_sock, FILE *resource){
     struct stat st;
     int fieldid = 0;
     char temp[64];
@@ -184,15 +186,18 @@ void headers(client_sock, resource){
 
     if(fstat(fieldid, &st) == -1){
         internal_error(client_sock);
+        return -1;
     }
 
     snprintf(temp, 64, "Content-Length: %ld\r\n\r\n", st.st_size);
     strcat(buff, temp);
-    ifa(_debug) fprintf(stdout, " header: %s\n", buff);
+    if(_debug) fprintf(stdout, " header: %s\n", buff);
 
-    if(send(client_sock, buff, strlen(buff), 0) < 0){
+    if(send(client_sock, buff, strlen(buff), 0) < 0){//发送失败
         fprintf(stderr, "send header failed.");
+        return -1;
     }
+    return  0;
 }
 
 void cat(int client_sock, FILE *resource){
