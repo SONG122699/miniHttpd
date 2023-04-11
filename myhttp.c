@@ -171,7 +171,44 @@ void not_found(int client_sock){
 
 
 }
+void internal_error(int client_sock){
+        const char* main_header = "\
+    HTTP/1.0 501 INTERNAL ERROR\r\n\
+    Content-Type: text/html\r\n\
+    \r\n\
+    ";
+    const char* reply = "\
+    <!DOCTYPE html>\n\
+    <html>\n\
+    <head>\n\
+	<title>501 INTERNAL ERROR</title>\n\
+    </head>\n\
+    <body>\n\
+	    <h1>501 INTERNAL ERROR</h1>\n\
+	    <p>501 INTERNAL ERROR</p>\n\
+    </body>\n\
+    </html>\n\
+    ";
 
+    int len  = write(client_sock, main_header, strlen(main_header));
+    if(_debug) fprintf(stdout, "... send main_header ...\n");
+    if(_debug) fprintf(stdout, "write[%d] : %s", len, main_header);
+
+    //2.生成Conten-Length行并发送
+    char send_buff[64];
+    int wc_len = strlen(reply);
+    len = snprintf(send_buff, 64, "Content=Length: %d\r\n\r\n", wc_len);
+    len = write(client_sock, send_buff, len);
+    if(_debug) fprintf(stdout, "write Content=Length[%d]: %s", len, send_buff);
+
+    len = write(client_sock, reply, strlen(reply));
+    if(_debug) fprintf(stdout, "write html[%d]: %s",len, reply);
+    if(len <= 0){
+        fprintf(stderr, "send reply failed, reason: %s\n", strerror(errno));
+    }
+
+
+}
 int headers(int client_sock, FILE *resource){
     struct stat st;
     int fieldid = 0;
