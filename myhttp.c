@@ -18,7 +18,10 @@ int get_line(int sock, char* buff, int size);
 void do_http_request(int client_sock);
 void do_http_response(int client_sock);
 void do_http_response(int client_sock, const char* path);
+void headers(int client_sock, FILE *resource);
+void cat(int client_sock, FILE *resource);
 void not_found(int client_sock);
+void internal_error(int client_sock);
 
 /*
 *解析客户端请求
@@ -73,7 +76,7 @@ void do_http_request(int client_sock){
                 }
             }
 
-            sprintf(path, "var/www/html%s", url);
+            sprintf(path, "/var/www/html%s", url);
             if(_debug) printf("html path: %s\n", path);
 
             //执行响应
@@ -82,7 +85,10 @@ void do_http_request(int client_sock){
                 not_found(client_sock);
             }
             else{
-                do_http_response(client_sock);
+                if(S_ISDIR(st.st_mode)){
+                    strcat(path, "/index.html");
+                }
+                do_http_response(client_sock, path);
             }
 
         }else{//非get请求,响应501 metho
@@ -104,48 +110,23 @@ void do_http_request(int client_sock){
 *响应客户端请求
 *@para client_sock 客户端socket编号
 */
-void do_http_response(int client_sock){
-    const char* main_header = "\
-    HTTP/1.0 200 OK\r\n\
-    Server: Song Server\r\n\
-    Content-Type: text/html\r\n\
-    Connection: Close\r\n\
-    ";
-    const char* welcome_html = "\
-    <!DOCTYPE html>\n\
-    <html>\n\
-    <head>\n\
-	    <meta charset=\"UTF-8\">\n\
-	    <title>登录页面</title>\n\
-    </head>\n\
-    <body align=center height=\"500px\" >\n\
-    <div>\n\
-    <h1>登录页面</h1>\n\
-    <form>\n\
-        <label for=\"email\">邮箱：</label><br>\n\
-        <input type=\"text\" id=\"email\" name=\"email\" placeholder=\"请输入邮箱\"><br>\n\
-        <label for=\"password\">密码：</label><br>\n\
-        <input type=\"password\" id=\"password\" name=\"password\" placeholder=\"请输入密码\"><br>\n\
-        <input type=\"submit\" value=\"登录\">\n\
-    </form>\n\
-    </div>\n\
-    </body>\n\
-    </html>\n\
-    ";
-    //1.发送main_header
-    int len  = write(client_sock, main_header, strlen(main_header));
-    if(_debug) fprintf(stdout, "... send main_header ...\n");
-    if(_debug) fprintf(stdout, "write[%d] : %s", len, main_header);
-    //2.生成Conten-Length行并发送
-    char send_buff[64];
-    int wc_len = strlen(welcome_html);
-    len = snprintf(send_buff, 64, "Content=Length: %d\r\n\r\n", wc_len);
-    len = write(client_sock, send_buff, len);
-    if(_debug) fprintf(stdout, "write Content=Length[%d]: %s", len, send_buff);
-    //3.发送HTML文件内容
-    len = write(client_sock, welcome_html, wc_len);
-    if(_debug) fprintf(stdout, "write html[%d]: %s",len, welcome_html);
+void do_http_response(int client_sock, const char* path){
+    FILE *resource  = NULL;
+    resource = fopen(path, "r");
+    if(resource == NULL){
+        not_found(client_sock);
+        return;
+    }
+    //1. 发送header
+    headers(client_sock, resource);
+
+    //2. 发送body
+    cat(client_sock, resource);
+
+    fclose(resource);
+    
 }
+
 /*
 *404
 *@para client_sock 客户端socket编号
@@ -189,6 +170,44 @@ void not_found(int client_sock){
 
 }
 
+void headers(client_sock, resource){
+    struct stat st;
+    int fieldid = 0;
+    char temp[64];
+    char buff[1024] = {0};
+    strcpy(buff, "HTTP/1.0 200 OK\r\n");
+    strcat(buff, "Server: Song Server\r\n");
+    strcat(buff, "Content-Type: text/html\r\n");
+    strcat(buff, "Connection: Close\r\n");
+
+    fieldid = fileno(resource);
+
+    if(fstat(fieldid, &st) == -1){
+        internal_error(client_sock);
+    }
+
+    snprintf(temp, 64, "Content-Length: %ld\r\n\r\n", st.st_size);
+    strcat(buff, temp);
+    ifa(_debug) fprintf(stdout, " header: %s\n", buff);
+
+    if(send(client_sock, buff, strlen(buff), 0) < 0){
+        fprintf(stderr, "send header failed.");
+    }
+}
+
+void cat(int client_sock, FILE *resource){
+    char buff[1024];
+    fgets(buff, sizeof(buff), resource);
+    while(!feof(resource)){
+        int len  = write(client_sock, buff, strlen(buff));
+        if(len < 0){//发送body 的过程中出现错误
+            fprintf(stderr, "send body error. reason: %s\n", strerror(errno));
+            break;
+        }
+        fgets(buff, sizeof(buff), resource);
+    }
+
+}
 /*读取请求信息
 *@para sock:套接字描述符
 *@para buff:数据缓冲区
