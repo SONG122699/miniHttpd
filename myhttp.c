@@ -17,7 +17,7 @@
 int get_line(int sock, char* buff, int size);
 void do_http_request(int client_sock);
 void do_http_response(int client_sock, const char* path);
-void headers(int client_sock, FILE *resource);
+int headers(int client_sock, FILE *resource);
 void cat(int client_sock, FILE *resource);
 void not_found(int client_sock);
 void internal_error(int client_sock);
