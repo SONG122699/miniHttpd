@@ -143,7 +143,7 @@ void not_found(int client_sock){
     <!DOCTYPE html>\r\n\
     <html lang=\"zh-CN\">\r\n\
     <head>\r\n\
-    meta content=\"text/html; charset=UTF-8\" http-equiv=\"Content-Type\">\r\n\
+    <meta content=\"text/html; charset=UTF-8\" http-equiv=\"Content-Type\">\r\n\
 	<title>404 Not Found</title>\r\n\
     </head>\r\n\
     <body>\r\n\
@@ -182,7 +182,7 @@ void internal_error(int client_sock){
     <!DOCTYPE html>\r\n\
     <html lang=\"zh-CN\">\r\n\
     <head>\r\n\
-    meta content=\"text/html; charset=UTF-8\" http-equiv=\"Content-Type\">\r\n\
+    <meta content=\"text/html; charset=UTF-8\" http-equiv=\"Content-Type\">\r\n\
 	<title>500 INTERNAL ERROR</title>\r\n\
     </head>\r\n\
     <body>\r\n\
